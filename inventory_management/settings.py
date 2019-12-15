@@ -102,6 +102,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CORS_ORIGIN_WHITELIST = [
+    'http://192.168.0.106:3000/'
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://192.168.0.106:3000/'
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/

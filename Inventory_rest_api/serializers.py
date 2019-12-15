@@ -1,15 +1,10 @@
 from rest_framework import serializers
-from .models import ProductModel,ProductImageModel,StockModel,CustomerModel,SellModel,BuyModel
+from .models import *
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductModel
-        fields = (
-            'product_id',
-            'product_name',
-            'product_description',
-            'category',
-            )
+        fields = '__all__'
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,13 +21,13 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = CustomerModel
         fields = '__all__'
 
-class SellSerializer(serializers.ModelSerializer):
+class SaleSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SellModel
+        model = SaleModel
         fields = '__all__'
 
-class BuySerializer(serializers.ModelSerializer):
+class PurchaseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BuyModel
+        model = PurchaseModel
         fields = '__all__'
 
