@@ -3,15 +3,24 @@ from django.urls import path
 from rest_framework import routers
 from rest_framework.urlpatterns import format_suffix_patterns 
 router = routers.DefaultRouter()
-router.register('Product',ProductApiView,basename='Product')
-router.register('ProductImage',ProductImageViewset)
-router.register('Stock',StockViewset)
-router.register('Customer',CustomerViewset)
-router.register('Sell',SaleViewset)
-router.register('Buy',PurchaseViewset)
+router.register('customer',CustomerViewset,basename='customer')
+router.register('customeraddress',CustomerAddressViewset)
+router.register('vendor',VendorViewset)
+router.register('vendoraddress',VendorAddressViewset)
+router.register('product',ProductViewset,basename='Product')
+router.register('productgroup',ProductGroupViewset,basename='Productgroup')
+router.register('productImage',ProductImageViewset)
+router.register('stock',StockViewset)
+router.register('sale',SaleViewset)
+router.register('salesorder',SalesOrderViewset)
+router.register('purchase',PurchaseViewset)
+router.register('purchaseorder',PurchaseOrderViewset)
+router.register('activity',ActivityViewset)
+router.register('invoice',InvoiceViewset)
+router.register('invoiceproducts',InvoiceProductsViewset)
 
 urlpatterns = [
-    path('Product/',ProductApiView.as_view()),
+    
     ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

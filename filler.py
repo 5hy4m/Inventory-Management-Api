@@ -31,9 +31,11 @@ def customer(N):
         c3 = obj.random.randint(9000000000,9999999999)
         c4 = obj.email()
         c5 = obj.paragraph()
+        c6 = obj.random.randint(1000,9999)
         # print(c3)
-        customer_obj = CustomerModel.objects.get_or_create(salutation = c1,customer_name = c2,phone_no = c3,email = c4,remarks = c5)
-        # print(customer_obj)
+        customer_obj = CustomerModel.objects.get_or_create(salutation = c1,customer_name = c2,phone_no = c3,email = c4,remarks = c5,outstanding_recievables=c6)
+        print(customer_obj)
+
 
 def productGroup(N):
     UNIT_CHOICES = [('box', 'box'),
@@ -78,7 +80,7 @@ def products(N):
     print('added')
 
 
-# Customer(10)
+customer(10)
 # vendor(10)
 # productGroup(10)
-products(10)
+# products(10)

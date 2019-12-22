@@ -1,0 +1,5 @@
+{
+    "python.pythonPath": "C:\\conda\\envs\\Invntory_app\\python.exe",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
+}
