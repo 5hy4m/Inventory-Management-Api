@@ -61,11 +61,11 @@ class ProductGroupModel(models.Model):
 
 class ProductModel(models.Model):
     group_id = models.ForeignKey(ProductGroupModel,on_delete=models.CASCADE)
-    product_id = models.IntegerField(primary_key=True)
+    product_id = models.AutoField(blank=True,primary_key=True)
     product_name = models.CharField(max_length=50)
     product_description = models.TextField(max_length=200)
     def __str__(self):
-        return str(self.product_name)
+        return str(self.product_id)
 
 class ProductImageModel(models.Model):
     product = models.ForeignKey(ProductModel,on_delete=models.CASCADE,related_name = "images")
@@ -75,12 +75,13 @@ class ProductImageModel(models.Model):
         return self.product
 
 class StockModel(models.Model):
-    product_id = models.ForeignKey(ProductModel,on_delete = models.CASCADE)
-    quantity = models.IntegerField()
-    location = models.TextField()
-
+    product_id = models.OneToOneField(ProductModel,related_name="stocks"  
+          ,on_delete = models.CASCADE,blank=True, primary_key = True)
+    quantity = models.IntegerField( )
+    location = models.TextField(blank=True,null=True)
+    commited = models.IntegerField(default=0)
     def __str__(self):
-        return self.product_id
+        return str(self.product_id)
 
 class VendorModel(models.Model):
     vendor_id = models.AutoField(primary_key = True)
@@ -148,7 +149,7 @@ class InvoiceModel(models.Model):
 
 class InvoiceProductsModel(models.Model):
     invoice_no = models.ForeignKey(InvoiceModel,related_name='invoice_products',on_delete = models.CASCADE)
-    product_id = models.ForeignKey(ProductModel,on_delete = models.PROTECT,blank=True,null=True)
+    product_id = models.ForeignKey(ProductModel,on_delete = models.SET_NULL,blank=True,null=True)
 
     def __str__(self):
             return str(self.invoice_no)

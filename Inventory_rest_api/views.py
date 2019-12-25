@@ -12,6 +12,12 @@ from django.core import serializers as serial
 
 # Create your views here.
 
+# To Convert QuesryDict to json
+#    request_as_json = json.loads(json.dumps(request.data))
+
+# To Convert QuerySet To JSON
+    # invoice_json = json.loads(serial.serialize('json',InvoiceModel.objects.filter(customer_id = pk)))
+
 
 class CustomerViewset(viewsets.ModelViewSet):
     queryset = CustomerModel.objects.all()
@@ -38,9 +44,9 @@ class CustomerViewset(viewsets.ModelViewSet):
         print("Create REQUEST :", request)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+          
             serializer.save()
-            self.storeActivity(
-                serializer.data['customer_id'], 'customer added')
+            self.storeActivity(serializer.data['customer_id'], 'customer added')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -178,6 +184,7 @@ class VendorAddressViewset(viewsets.ModelViewSet):
 class ProductViewset(viewsets.ModelViewSet):
     queryset = ProductModel.objects.all()
     serializer_class = ProductSerializer
+    
 
     def storeActivity(self, id, event):
         activityobj = ActivityModel.objects.get_or_create(
@@ -191,12 +198,15 @@ class ProductViewset(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request):
-        print("Create REQUEST :", request)
+        print("Create REQUEST :", request.data) #REQUEST IS A QUERY DICT
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            self.storeActivity(
-                serializer.data['product_id'], 'product added')
+            
+            ### Storing Activity
+            # serializer.instance.product_id to get instance primary key
+            self.storeActivity(serializer.instance.product_id, 'product added')
+            ###
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -217,6 +227,14 @@ class ProductViewset(viewsets.ModelViewSet):
 class ProductGroupViewset(viewsets.ModelViewSet):
     queryset = ProductGroupModel.objects.all()
     serializer_class = ProductGroupSerializer
+
+    @action(methods=['get'], detail=True,)
+    def products(self,request,pk=None):
+        items_json = json.loads(serial.serialize('json',ProductModel.objects.filter(group_id = pk)))
+        print("itemsOfGroup ",pk," : ",items_json)
+        return Response(items_json,status =200)
+
+
 
     def storeActivity(self, id, event):
         activityobj = ActivityModel.objects.get_or_create(
@@ -267,6 +285,15 @@ class StockViewset(viewsets.ModelViewSet):
     queryset = StockModel.objects.all()
     serializer_class = StockSerializer
 
+    @action(methods=['get'], detail=False,url_path="totalitems")
+    def totalItemsInInventory(self,request): 
+        TotalProducts = 0
+        lists = StockModel.objects.values_list('quantity')
+        for i in lists:
+            TotalProducts += i[0]
+        print('TotalProducts',TotalProducts)
+        return Response(TotalProducts,status =200)
+
     def storeActivity(self, id, event):
         activityobj = ActivityModel.objects.get_or_create(
             ids=id, activity_name=event)
@@ -284,7 +311,7 @@ class StockViewset(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             self.storeActivity(
-                serializer.data['customer_id'], 'customer added')
+                serializer.data['product_id'], 'stock added')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -293,14 +320,14 @@ class StockViewset(viewsets.ModelViewSet):
         # obj = CustomerModel.objects.filter(pk=pk)
         # serializer = serial.serialize('json',obj)
         self.perform_destroy(instance)
-        self.storeActivity(pk, 'customer deleted')
+        self.storeActivity(pk, 'stock deleted')
 
         return
 
     def perform_update(self, serializer):
         print('update')
         serializer.save()
-        self.storeActivity(serializer.data['customer_id'], 'customer updated')
+        self.storeActivity(serializer.data['product_id'], 'stock updated')
 
 class SaleViewset(viewsets.ModelViewSet):
     queryset = SaleModel.objects.all()
@@ -479,7 +506,7 @@ class InvoiceViewset(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             self.storeActivity(
-                serializer.data['invoice_no'], 'invoice added')
+                serializer.instance.invoice_no, 'invoice added')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
