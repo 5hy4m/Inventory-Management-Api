@@ -35,17 +35,16 @@ class ProductSerializer(serializers.ModelSerializer):
         print("inside update metod of serializer")
         print('INSTANCE : ',instance)
         nested_data = validated_data.pop('stocks')
-        product = ProductModel.objects.create(**validated_data)
+        print('INSTANCE : ',instance.product_id)
+        # stock = instance.stocks.all()
         ###updating parent 
         instance.group_id = validated_data['group_id']
-        instance.product_id = validated_data['product_id']
+        instance.product_id = instance.product_id
         instance.product_name = validated_data['product_name']
         instance.product_description = validated_data['product_description']
+        instance.save()
         ### updating nested value ###
-        
-        product.stocks.add(nested_data)
-        print("Stocks data : ",validated_data)
-
+        StockModel.objects.filter(product_id =instance.product_id ).update(**nested_data)
         return instance
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -91,7 +90,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class InvoiceProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceProductsModel
-        fields = ['product_id']
+        fields = ['product_id','invoice_no']
 
 class InvoiceSerializer(serializers.ModelSerializer):
     invoice_products = InvoiceProductsSerializer(many=True)
@@ -106,6 +105,31 @@ class InvoiceSerializer(serializers.ModelSerializer):
         for product in products_data:
             InvoiceProductsModel.objects.create(invoice_no = invoice,**product)
         return invoice
+
+    def update(self,instance,validated_data):
+        print("inside update metod of serializer")
+        # print('INSTANCE : ',validated_data)
+        nested_data = validated_data.pop('invoice_products')
+        invoice_products = (instance.invoice_products).all()
+        invoice_products = list(invoice_products)
+        print('INSTANCE : ',nested_data)
+        print()
+        ###updating parent 
+        instance.invoice_no = int(instance.invoice_no)
+        instance.customer_id = validated_data['customer_id']
+        instance.due_date = validated_data['due_date']
+        instance.invoice_status = validated_data['invoice_status']
+        instance.customer_notes = validated_data['customer_notes']
+        instance.terms_and_conditions = validated_data['terms_and_conditions']
+        instance.save()
+        ### updating nested value ###
+        print("pk value :",int(instance.invoice_no))
+        for data in nested_data:
+            invoice_product = invoice_products.pop(0)
+            invoice_product.product_id = data.get('product_id')
+            invoice_product.save()
+        return instance
+    
 
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:

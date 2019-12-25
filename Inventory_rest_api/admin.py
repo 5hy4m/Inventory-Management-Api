@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import *
 # Register your models here.
 class StockAdmin(admin.ModelAdmin):
-    list_display = ('product_id', 'commited', 'quantity')
+    list_display = ('product_id', 'commited', 'quantity','location')
 
 # To Show PRimary key
 class ProductAdmin(admin.ModelAdmin):
@@ -20,6 +20,7 @@ admin.site.register(SaleModel)
 admin.site.register(SalesOrderModel)
 admin.site.register(PurchaseOrderModel)
 admin.site.register(InvoiceModel)
+admin.site.register(InvoiceProductsModel)
 admin.site.register(ActivityModel)
 admin.site.register(StockModel, StockAdmin)
 

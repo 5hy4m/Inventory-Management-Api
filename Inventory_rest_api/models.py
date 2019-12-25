@@ -138,7 +138,7 @@ class PurchaseOrderModel(models.Model):
 class InvoiceModel(models.Model):
     invoice_no = models.AutoField(primary_key=True)
     customer_id = models.ForeignKey(CustomerModel,on_delete = models.PROTECT)
-    invoice_date = models.DateField()
+    invoice_date = models.DateField(auto_now_add=True)
     due_date = models.DateField()
     invoice_status = models.CharField(max_length=10,choices = INVOICE_STATUS,default=INVOICE_STATUS[0][0])
     customer_notes = models.TextField()
