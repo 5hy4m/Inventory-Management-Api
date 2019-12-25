@@ -91,19 +91,20 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class InvoiceProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceProductsModel
-        fields = ['invoice_no','product_id']
+        fields = ['product_id']
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    products = InvoiceProductsSerializer(many=True)
+    invoice_products = InvoiceProductsSerializer(many=True)
     class Meta:
         model = InvoiceModel
         fields = '__all__'
         read_only_fields = ('invoice_no',)
 
     def create(self, validated_data):
-        products_data = validated_data.pop('stocks')
+        products_data = validated_data.pop('invoice_products')
         invoice = InvoiceModel.objects.create(**validated_data)#To get pk of the instance
-        InvoiceProductsModel.objects.create(invoice_no = invoice,**products_data)
+        for product in products_data:
+            InvoiceProductsModel.objects.create(invoice_no = invoice,**product)
         return invoice
 
 class ActivitySerializer(serializers.ModelSerializer):

@@ -148,7 +148,7 @@ class InvoiceModel(models.Model):
         return str(self.invoice_no)
 
 class InvoiceProductsModel(models.Model):
-    invoice_no = models.ForeignKey(InvoiceModel,related_name='invoice_products',on_delete = models.CASCADE)
+    invoice_no = models.ForeignKey(InvoiceModel,related_name='invoice_products',blank=True,on_delete = models.CASCADE)
     product_id = models.ForeignKey(ProductModel,on_delete = models.SET_NULL,blank=True,null=True)
 
     def __str__(self):
