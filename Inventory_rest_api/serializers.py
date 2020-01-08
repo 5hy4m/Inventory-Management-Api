@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
-
+import datetime as dt
+import calendar
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -90,7 +91,8 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class InvoiceProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceProductsModel
-        fields = ['product_id','invoice_no']
+        fields = ['product_id','invoice_id']
+        read_only_fields = ('invoice_id',)
 
 class InvoiceSerializer(serializers.ModelSerializer):
     invoice_products = InvoiceProductsSerializer(many=True)
@@ -98,16 +100,76 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = InvoiceModel
         fields = '__all__'
         read_only_fields = ('invoice_no',)
+    
+    def getNewInvoiceNo(self,restart,previous,code):
+        if(restart):
+            n = 0
+            restart = False
+            # print("n value while restart: ",n)
+        else:
+            n = previous
+            n= n + 1
+            # print("n value : ",n)  
+        return str(str(code)+str(n))
 
+    def fiscal_detail(self,organization,current_date,new):
+            if new == True:
+                print("GENERATING FISCAL YEAR")
+                fiscal_detail = organization.fiscal_detail
+                fiscal_detail = fiscal_detail.split("-") #GETTING fiscal detail
+                fiscal_start_month = int(fiscal_detail[0])
+                fiscal_end_month = int(fiscal_detail[1])
+                fiscal_end_year = current_date.year if (fiscal_end_month == 12) else current_date.year+1
+                last_day_of_fiscal_endmonth = (calendar.monthrange(fiscal_end_year,fiscal_end_month))[1]
+                last_date_of_fiscal_endyear = dt.datetime(fiscal_end_year, fiscal_end_month, last_day_of_fiscal_endmonth)
+                OrganizationModel.objects.filter(pk=1).update(fiscal_end = last_date_of_fiscal_endyear)
+            else:
+                return OrganizationModel.objects.first().fiscal_end
+                
     def create(self, validated_data):
-        products_data = validated_data.pop('invoice_products')
+        current_date = dt.datetime.now()
+        # current_date = dt.datetime(2021,1,1)
+        current_date = dt.datetime(current_date.year, current_date.month, current_date.day)#CREATING A DATE OBJECT
+        organization = OrganizationModel.objects.first()
+        code = organization.invoice_code
+        invoices_objects = InvoiceModel.objects.last()
+
+
+        if not invoices_objects:
+            # print("There IS No objects in invoice")
+            previous = 1
+            restart = True
+            last_date_of_fiscal_year = self.fiscal_detail(organization,current_date,new = True)
+        elif (current_date <= dt.datetime.strptime(organization.fiscal_end, '%Y-%m-%d %H:%M:%S')):
+            # print("DOnt Restart")
+            # invoices_objects = InvoiceModel.objects.order_by('-id')[0]
+            previous = invoices_objects.invoice_no
+            print("Previous invoice number : ",previous.split("-")[1])
+            previous = int(previous.split("-")[1])
+            restart = False
+        else:
+            invoice_id_activity = ActivityModel.objects.filter(activity_name__icontains = 'invoice').latest('Date','Time')
+            invoice_id_activity = invoice_id_activity.ids.split("-")[0]
+            if invoice_id_activity == organization.invoice_code[0:-1]:
+                raise serializers.ValidationError('Please Change the Invoice code,Sales code,purchase code')
+            restart = True
+            previous = 1
+            last_date_of_fiscal_year = self.fiscal_detail(organization,current_date,new = True)
+
+            
+        ### function CAll
+        previous = self.getNewInvoiceNo(restart,previous,code)# THIS IS THE INVOICE NUMBER
+        products_data = validated_data.pop('invoice_products')    
+        validated_data['invoice_no'] = previous
+        # print("validated_data",validated_data,sep = " : ")
         invoice = InvoiceModel.objects.create(**validated_data)#To get pk of the instance
+        # print("populated in invoice Model yet to populate in invoiceproducts Model")
         for product in products_data:
-            InvoiceProductsModel.objects.create(invoice_no = invoice,**product)
+            InvoiceProductsModel.objects.create(invoice_id = invoice,**product)
         return invoice
 
     def update(self,instance,validated_data):
-        print("inside update metod of serializer")
+        print("inside update method of serializer")
         # print('INSTANCE : ',validated_data)
         nested_data = validated_data.pop('invoice_products')
         invoice_products = (instance.invoice_products).all()
@@ -130,8 +192,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
             invoice_product.save()
         return instance
     
-
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityModel
         fields = '__all__'
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationModel
+        fields = '__all__'
+

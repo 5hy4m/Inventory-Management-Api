@@ -8,6 +8,10 @@ class StockAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     readonly_fields = ('product_id',) 
 
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ('ids','activity_name','Date','Time')
+
+admin.site.register(OrganizationModel)
 admin.site.register(ProductModel,ProductAdmin)
 admin.site.register(ProductImageModel)
 admin.site.register(CustomerModel)
@@ -21,6 +25,6 @@ admin.site.register(SalesOrderModel)
 admin.site.register(PurchaseOrderModel)
 admin.site.register(InvoiceModel)
 admin.site.register(InvoiceProductsModel)
-admin.site.register(ActivityModel)
+admin.site.register(ActivityModel,ActivityAdmin)
 admin.site.register(StockModel, StockAdmin)
-
+admin.site.register(AddressModel)
