@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "C:\\conda\\envs\\Invntory_app\\python.exe",
+    "python.pythonPath": "C:\\ProgramData\\Anaconda3\\envs\\inventory_management\\python.exe",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true
 }

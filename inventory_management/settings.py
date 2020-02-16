@@ -26,12 +26,17 @@ SECRET_KEY = 'b#0@-lhunz2+m6^8#_^6cdj--el@hn@lvafxh^1b2mj3zi8=oc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '*'
+]
 
 
 # Application definition
 
+
+
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +50,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -103,11 +109,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'http://192.168.0.106:3000/'
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://192.168.0.106:3000',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://192.168.0.106:3000/'
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://192.168.0.106:3000',
 ]
 
 # Internationalization
