@@ -22,7 +22,7 @@ from datetime import datetime,timedelta
 
 def storeActivity( id, event,description = ""):
         activityobj = ActivityModel.objects.get_or_create(
-            ids=id, activity_name=event,description = description)
+        ids=id, activity_name=event,description = description)
         print('ACTIVITY Created')
         return
 
@@ -37,16 +37,10 @@ class CustomerViewset(viewsets.ModelViewSet):
         print("invoice_json : ",invoice_json)
         return Response(invoice_json,status =200)
 
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        return Response(serializer.data)
-
     def create(self, request):
-        print("Create REQUEST :", request)
+        print("Create REQUEST :", request.data)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-          
             serializer.save()
             storeActivity(serializer.data['customer_id'], 'customer added')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -60,7 +54,6 @@ class CustomerViewset(viewsets.ModelViewSet):
         description = request.data['description']
         self.perform_destroy(instance)
         storeActivity(pk, 'customer deleted',description)
-
         return
 
     def perform_update(self, serializer):
@@ -72,19 +65,13 @@ class VendorViewset(viewsets.ModelViewSet):
     queryset = VendorModel.objects.all()
     serializer_class = VendorSerializer
 
-
-    def list(self, request):
-        serializer = self.get_serializer(VendorModel.objects.all(), many=True)
-        print("LIST IS CALLED",serializer.data)
-        return Response(serializer.data)
-
     def create(self, request):
         print("Create REQUEST :", request)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             storeActivity(
-                serializer.data['vendor_id'], 'vendor added')
+                serializer.data['id'], 'vendor added')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,13 +98,6 @@ class ProductViewset(viewsets.ModelViewSet):
         group_id=request.data['group_id']
         groupName_json = json.loads(serial.serialize('json',ProductGroupModel.objects.filter(group_id = group_id)))[0]['fields']['group_name']
         return Response(groupName_json,status =200)
-
-
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        jsons = json.loads(serial.serialize('json',ProductModel.objects.all()))
-        print("LIST IS CALLED",len(serializer.data))
-        return Response(serializer.data)
 
     def create(self, request):
         print("Create REQUEST :", request.data) #REQUEST IS A QUERY DICT
@@ -164,11 +144,6 @@ class ProductGroupViewset(viewsets.ModelViewSet):
         print("itemsOfGroup ",pk," : ",items_json)
         return Response(items_json,status =200)
 
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        return Response(serializer.data)
-
     def create(self, request):
         print("Create REQUEST :", request)
         serializer = self.get_serializer(data=request.data)
@@ -209,12 +184,6 @@ class StockViewset(viewsets.ModelViewSet):
         print('TotalProducts',TotalProducts)
         return Response(TotalProducts,status =200)
 
-
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        return Response(serializer.data)
-
     def create(self, request):
         print("Create REQUEST :", request)
         serializer = self.get_serializer(data=request.data)
@@ -243,10 +212,6 @@ class SalesProductsViewset(viewsets.ModelViewSet):
     queryset = SalesProductsModel.objects.all()
     serializer_class = SaleProductsSerializer
 
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        return Response(serializer.data)
 
     def create(self, request):
         print("Create REQUEST :", request)
@@ -298,36 +263,29 @@ class SalesOrderViewset(viewsets.ModelViewSet):
                 return Response(prefix+'-'+number,status =200) 
         # return Response(latest_salesorder,status =200)
 
-    @action(methods=['get'], detail=True,)
+    @action(methods=['get'], detail=True)
     def customer(self,request,pk=None):
-        customer_json = json.loads(serial.serialize('json',CustomerModel.objects.filter(customer_id = pk)))
-        print("invoice_json : ",customer_json)
-        return Response(customer_json,status =200)
-
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("sales IS CALLED")
-        serializer.data.append({"customer_name":"lol"})
-        print(serializer.data)
-        return Response(serializer.data)
+        name = SalesOrderModel.objects.get(id = pk)
+        name = str(name.customer_id)
+        return Response(name,status =200)
 
     def create(self, request):
         print("Create REQUEST :", request)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            storeActivity(serializer.data['sales_order_no'], 'sales order added')
+            storeActivity(serializer.data['sales_order_no'], 'sales order Created')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk):
-        instance = self.get_object()
-        # obj = CustomerModel.objects.filter(pk=pk)
-        # serializer = serial.serialize('json',obj)
-        self.perform_destroy(instance)
-        storeActivity(pk, 'sales order deleted')
-
-        return
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            storeActivity(pk, 'sales order deleted')
+        except Http404:
+            pass
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_update(self, serializer):
         print('update')
@@ -344,14 +302,32 @@ class PurchaseOrderViewset(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=True,)
     def vendor(self,request,pk=None):
-        customer_json = json.loads(serial.serialize('json',VendorModel.objects.filter(vendor_id = pk)))
-        return Response(customer_json,status =200)
+        name = PurchaseOrderModel.objects.get(id = pk)
+        name = str(name.vendor_id)
+        return Response(name,status =200)
 
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        print(request.data)
-        return Response(serializer.data)
+    @action(methods=['get'], detail=True)
+    def getNextPurchaseOrderNumber(self,request,pk=None):
+        # latest_invoice = json.loads(serial.serialize('json',invoiceModel.objects.latest('invoice_date')))
+        # latest_invoice = invoiceModel.objects.latest('sales_order_date')
+        latest_purchaseorder = PurchaseOrderModel.objects.order_by('purchase_date')
+        latest = 0
+        for i in latest_purchaseorder:
+            # hrs,mins,secs=str(i.sales_order_time).split(':')
+            # secs,ms = secs.split('.')
+            time_obj = i.purchaseorder_time
+            if latest==0:
+                latest = time_obj
+            elif latest < time_obj:
+                latest = time_obj
+        for i in latest_purchaseorder:
+            if i.purchase_time == latest:
+                print("purchaseorderNumber : ",latest)
+                prefix,number = str(i.purchaseorder_no).split('-')
+                number = str(int(number)+1)
+                return Response(prefix+'-'+number,status =200) 
+        # return Response(latest_invoice,status =200)
+
 
     def create(self, request):
         print("Create REQUEST :", request)
@@ -380,15 +356,37 @@ class InvoiceViewset(viewsets.ModelViewSet):
     queryset = InvoiceModel.objects.all()
     serializer_class = InvoiceSerializer
     
+    @action(methods=['get'], detail=True)
+    def getNextInvoiceNumber(self,request,pk=None):
+        # latest_invoice = json.loads(serial.serialize('json',invoiceModel.objects.latest('invoice_date')))
+        # latest_invoice = invoiceModel.objects.latest('sales_order_date')
+        latest_invoice = InvoiceModel.objects.order_by('invoice_date')
+        latest = 0
+        for i in latest_invoice:
+            # hrs,mins,secs=str(i.sales_order_time).split(':')
+            # secs,ms = secs.split('.')
+            time_obj = i.invoice_time
+            if latest==0:
+                latest = time_obj
+            elif latest < time_obj:
+                latest = time_obj
+        for i in latest_invoice:
+            if i.invoice_time == latest:
+                print("invoiceNumber : ",latest)
+                prefix,number = str(i.invoice_no).split('-')
+                number = str(int(number)+1)
+                return Response(prefix+'-'+number,status =200) 
+        # return Response(latest_invoice,status =200)
+
+
     @action(methods=['get'], detail=True,)
     def customer(self,request,pk=None):
-        customer_json = json.loads(serial.serialize('json',CustomerModel.objects.filter(customer_id = pk)))
-        return Response(customer_json,status =200)
+        name = InvoiceModel.objects.get(id = pk)
+        print(name.customer_id)
+        name = str(name.customer_id)
+        return Response(name,status =200)
 
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        return Response(serializer.data)
+    
 
     def create(self, request):
         print("Create REQUEST :", request)
@@ -440,13 +438,10 @@ class BillViewset(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=True,)
     def vendor(self,request,pk=None):
-        customer_json = json.loads(serial.serialize('json',VendorModel.objects.filter(vendor_id = pk)))
-        return Response(customer_json,status =200)
+        name = BillModel.objects.get(id = pk)
+        name = str(name.customer_id)
+        return Response(name,status =200)
 
-    def list(self, request):
-        serializer = self.get_serializer(self.queryset, many=True)
-        print("LIST IS CALLED")
-        return Response(serializer.data)
 
     def create(self, request):
         print("Create REQUEST :", request)

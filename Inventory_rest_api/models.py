@@ -112,6 +112,7 @@ class ProductModel(models.Model):
     selling_price = models.FloatField(default=0)
     cost_price = models.FloatField(default=0)
 
+
     def __str__(self):
         return str(self.product_id)
 
@@ -131,15 +132,15 @@ class StockModel(models.Model):
         return str(self.product_id)
 
 class VendorModel(models.Model):
-    vendor_id = models.AutoField(primary_key = True)
-    vendor_name = models.CharField(max_length = 50)
-    vendor_email = models.CharField(max_length = 50)
-    vendor_phno = models.BigIntegerField()
+    id = models.AutoField(primary_key = True)
+    name = models.CharField(max_length = 50)
+    email = models.CharField(max_length = 50)
+    phone_no = models.BigIntegerField()
     salutation = models.CharField(max_length = 4,choices = SALUTATION_CHOICES)
     remarks = models.TextField()
     payables = models.IntegerField(default=0)
     def __str__(self):
-        return self.vendor_name
+        return self.name
 
 class BillModel(models.Model):
     bill_no = models.CharField(max_length=10,unique=True)
@@ -148,8 +149,12 @@ class BillModel(models.Model):
     due_date = models.DateField()
     bill_status = models.CharField(max_length=10,choices=BILL_STATUS,default=BILL_STATUS[0][0])
     vendor_id = models.ForeignKey(VendorModel,blank=True,null=True,on_delete = models.PROTECT)
-    vendor_notes = models.TextField()
-    terms_and_conditions = models.TextField()
+    vendor_notes = models.TextField(blank=True)
+    terms_and_conditions = models.TextField(blank=True)
+    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES,default=ADJUSTMENT_CHOICES[0][0])
+    adjustment_value = models.FloatField()
+    subtotal = models.FloatField(default=0)
+    total = models.FloatField(default=0)
 
     def __str__(self):
         return str(self.bill_no)
@@ -161,8 +166,7 @@ class BillProductsModel(models.Model):
     rate = models.FloatField()
     discount_type = models.CharField(max_length = 3,choices = DISCOUNT_CHOICES)
     discount_value = models.FloatField()
-    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES)
-    adjustment_value = models.FloatField()
+    amount = models.FloatField(default=0)
 
     def __str__(self):
         return str(self.bill_id)
@@ -172,10 +176,13 @@ class InvoiceModel(models.Model):
     customer_id = models.ForeignKey(CustomerModel,on_delete = models.PROTECT)
     invoice_date = models.DateField(auto_now_add=True)
     invoice_time = models.TimeField(auto_now_add=True)
-    due_date = models.DateField()
     invoice_status = models.CharField(max_length=10,choices = INVOICE_STATUS,default=INVOICE_STATUS[0][0])
-    customer_notes = models.TextField()
-    terms_and_conditions = models.TextField()
+    customer_notes = models.TextField(blank=True)
+    terms_and_conditions = models.TextField(blank=True)
+    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES,default=ADJUSTMENT_CHOICES[0][0])
+    adjustment_value = models.FloatField(default = 0)
+    subtotal = models.FloatField(default=0)
+    total = models.FloatField(default=0)
 
     def __str__(self):
         return str(self.invoice_no)
@@ -187,8 +194,7 @@ class InvoiceProductsModel(models.Model):
     rate = models.FloatField(default=0)
     discount_type = models.CharField(max_length = 3,choices = DISCOUNT_CHOICES,default=DISCOUNT_CHOICES[0][0])
     discount_value = models.FloatField(default=0)
-    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES,default=ADJUSTMENT_CHOICES[0][0])
-    adjustment_value = models.FloatField(default = 0)
+    amount = models.FloatField(default=0)
 
     def __str__(self):  
         return str(self.invoice_id)
@@ -199,8 +205,12 @@ class PurchaseOrderModel(models.Model):
     purchase_time = models.TimeField(auto_now_add=True)
     purchase_order_status = models.CharField(max_length=10,choices=PURCHASE_ORDER_STATUS,default=PURCHASE_ORDER_STATUS[0][0])
     vendor_id = models.ForeignKey(VendorModel,blank=True,null=True,on_delete = models.PROTECT)
-    vendor_notes = models.TextField()
-    terms_and_conditions = models.TextField()
+    vendor_notes = models.TextField(blank=True)
+    terms_and_conditions = models.TextField(blank=True)
+    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES,default=ADJUSTMENT_CHOICES[0][0])
+    adjustment_value = models.FloatField(default = 0)
+    subtotal = models.FloatField(default=0)
+    total = models.FloatField(default=0)
 
     def __str__(self):  
         return str(self.purchase_order_no)
@@ -212,8 +222,7 @@ class PurchaseProductsModel(models.Model):
     rate = models.FloatField()
     discount_type = models.CharField(max_length = 3,choices = DISCOUNT_CHOICES)
     discount_value = models.FloatField()
-    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES)
-    adjustment_value = models.FloatField()
+    amount = models.FloatField(default=0)
 
     def __str__(self):  
         return str(self.purchase_order_id)
@@ -225,8 +234,12 @@ class SalesOrderModel(models.Model):
     sales_order_date = models.DateField(auto_now_add=True)
     sales_order_time = models.TimeField(auto_now_add=True)
     customer_id = models.ForeignKey(CustomerModel,blank=True,null = True,on_delete = models.PROTECT)
-    customer_notes = models.TextField()
-    terms_and_conditions = models.TextField()
+    customer_notes = models.TextField(blank=True)
+    terms_and_conditions = models.TextField(blank=True)
+    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES,default=ADJUSTMENT_CHOICES[0][0])
+    adjustment_value = models.FloatField(default = 0)
+    subtotal = models.FloatField(default=0)
+    total = models.FloatField(default=0)
 
     def __str__(self):
         return self.sales_order_no
@@ -238,11 +251,10 @@ class SalesProductsModel(models.Model):
     rate = models.FloatField()
     discount_type = models.CharField(max_length = 3,choices = DISCOUNT_CHOICES)
     discount_value = models.FloatField()
-    adjustment = models.CharField(max_length=3,choices = ADJUSTMENT_CHOICES)
-    adjustment_value = models.FloatField()
+    amount = models.FloatField(default=0)
 
 class ActivityModel(models.Model):
-    activity_id = models.IntegerField(primary_key=True)
+    activity_id = models.AutoField(primary_key=True)
     ids = models.CharField(max_length=15,null = False)
     activity_name = models.CharField(max_length = 250)
     date = models.DateField(auto_now_add=True)

@@ -80,6 +80,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = CustomerModel
         fields = '__all__'
 
+    
+
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockModel
@@ -112,7 +114,7 @@ class ProductSerializer(serializers.ModelSerializer):
         instance.product_description = validated_data['product_description']
         instance.save()
         ### updating nested value ###
-        StockModel.objects.filter(product_id =instance.product_id ).update(**nested_data)
+        StockModel.objects.filter(product_id =instance.product_id).update(**nested_data)
         return instance
 
 class ProductGroupSerializer(serializers.ModelSerializer):
@@ -179,28 +181,52 @@ class SaleOrderSerializer(serializers.ModelSerializer):
 
     def update(self,instance,validated_data):
         print("inside update method of serializer")
-        # print('INSTANCE : ',validated_data)
+        print('INSTANCE : ',validated_data)
+        print()
         nested_data = validated_data.pop('sales_products')
         sales_products = (instance.sales_products).all()
         sales_products = list(sales_products)
-        print('INSTANCE : ',nested_data)
-        print()
-        ###updating parent 
+        print('INSTANCE of nesteddata : ',nested_data)
+        ### updating parent 
+        instance.customer_id =  validated_data['customer_id']
         instance.sales_order_status = validated_data['sales_order_status']
         instance.customer_notes = validated_data['customer_notes']
         instance.terms_and_conditions = validated_data['terms_and_conditions']
+        instance.adjustment = validated_data['adjustment']
+        instance.adjustment_value = validated_data['adjustment_value']
+        instance.subtotal = validated_data['subtotal']
+        instance.total = validated_data['total']
         instance.save()
         ### updating nested value ###
-        for data in nested_data:
-            sales_product = sales_products.pop(0)
-            sales_product.product_id = data.get('product_id')
-            sales_product.quantity= data.get('quantity')
-            sales_product.rate= data.get('rate')
-            sales_product.discount_type= data.get('discount_type')
-            sales_product.discount_value= data.get('discount_value')
-            sales_product.adjustment= data.get('adjustment')
-            sales_product.adjustment_value= data.get('adjustment_value')
-            sales_product.save()
+        if len(nested_data) >= len(sales_products):
+            for data in nested_data:
+                if len(sales_products) != 0:  
+                    sales_product = sales_products.pop(0)
+                    print("iter")
+                    sales_product.product_id = data.get('product_id')
+                    sales_product.quantity= data.get('quantity')
+                    sales_product.rate= data.get('rate')
+                    sales_product.discount_type= data.get('discount_type')
+                    sales_product.discount_value= data.get('discount_value')
+                    sales_product.amount= data.get('amount')
+                    sales_product.save()
+                else:
+                    SalesProductsModel.objects.create(sales_id=instance,**data)
+        else:
+            for i,sales_product in enumerate(sales_products):
+                if len(nested_data) > i:
+                    sales_product.product_id = nested_data[i].get('product_id')
+                    sales_product.quantity= nested_data[i].get('quantity')
+                    sales_product.rate= nested_data[i].get('rate')
+                    sales_product.discount_type= nested_data[i].get('discount_type')
+                    sales_product.discount_value= nested_data[i].get('discount_value')
+                    sales_product.amount= nested_data[i].get('amount')
+                    sales_product.save()
+                else:
+                    print(len(nested_data))
+                    print('deleting')
+                    sales_product.delete()
+
         return instance 
 
 class PurchaseProductsSerializer(serializers.ModelSerializer):
@@ -279,7 +305,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class InvoiceProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceProductsModel
-        fields = ['product_id','invoice_id']
+        fields = '__all__'
         read_only_fields = ('invoice_id',)
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -354,6 +380,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityModel
         fields = '__all__'
+        read_only_fields = ('date','time','activity_id',)
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:

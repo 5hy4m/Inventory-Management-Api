@@ -8,7 +8,7 @@
             "name": "Python: Django",
             "type": "python",
             "request": "launch",
-            "pythonPath": "C:\\conda\\envs\\inventory_management\\python.exe",
+            "pythonPath": "C:\\Users\\5hy4m~\\AppData\\Local\\Programs\\Python\\Python37-32\\python.exe",
             "program": "${workspaceFolder}\\manage.py",
             "args": [
                 "runserver",
